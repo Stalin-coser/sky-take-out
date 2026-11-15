@@ -23,4 +23,9 @@
         </set>
         where id = #{id}
     </update>
+    <select id="historyOrders" resultType="com.sky.vo.OrderVO">
+        select * from sky_take_out.orders where user_id = #{userId}
+        <if test="status != null"> and status = #{status}</if>
+        order by order_time desc
+    </select>
 </mapper>
