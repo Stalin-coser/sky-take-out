@@ -19,4 +19,7 @@ public interface OrderMapper {
 
 
     Page<OrderVO> historyOrders(OrdersPageQueryDTO ordersPageQueryDTO);
+
+    @Select("select * from orders where id = #{id}")
+    Orders getById(Long id);
 }
