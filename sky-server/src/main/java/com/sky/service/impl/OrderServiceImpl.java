@@ -150,6 +150,7 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
+    @Transactional
     public PageResult historyOrders(OrdersPageQueryDTO ordersPageQueryDTO) {
         Long userId = BaseContext.getCurrentId();
         ordersPageQueryDTO.setUserId(userId);
@@ -181,6 +182,28 @@ public class OrderServiceImpl implements OrderService {
         orders.setId(id);
         orders.setStatus(Orders.CANCELLED);
         orderMapper.update(orders);
+    }
+
+    @Override
+    @Transactional
+    public void repetition(Long id) {
+        Long userId = BaseContext.getCurrentId();
+        Orders order = orderMapper.getById(id);
+        if (!userId.equals(order.getUserId())) {
+            throw new OrderBusinessException(MessageConstant.ORDER_NOT_FOUND);
+        }
+
+        List<OrderDetail> details = orderDetailMapper.listByOrderId(id);
+
+
+        LocalDateTime now = LocalDateTime.now();
+        for (OrderDetail detail : details) {
+            ShoppingCart cart = new ShoppingCart();
+            BeanUtils.copyProperties(detail, cart, "id");
+            cart.setUserId(userId);
+            cart.setCreateTime(now);
+            shoppingCartMapper.insert(cart);
+        }
     }
 
 }
