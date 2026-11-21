@@ -26,4 +26,7 @@ public interface OrderMapper {
     Orders getById(Long id);
 
     Page<OrderVO> condtitionSearch(OrdersPageQueryDTO ordersPageQueryDTO);
+
+    @Select("select count(*) from orders where status = #{status}")
+    Integer countStatus(Integer status);
 }
