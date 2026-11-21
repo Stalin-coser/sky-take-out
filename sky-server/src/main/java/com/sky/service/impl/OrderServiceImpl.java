@@ -28,6 +28,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class OrderServiceImpl implements OrderService {
@@ -204,6 +205,20 @@ public class OrderServiceImpl implements OrderService {
             cart.setCreateTime(now);
             shoppingCartMapper.insert(cart);
         }
+    }
+
+    @Override
+    public PageResult conditionSearch(OrdersPageQueryDTO ordersPageQueryDTO) {
+        PageHelper.startPage(ordersPageQueryDTO.getPage() , ordersPageQueryDTO.getPageSize());
+        Page<OrderVO> page = orderMapper.condtitionSearch(ordersPageQueryDTO);
+        List<OrderVO> result = page.getResult();
+        for (OrderVO orderVO : result) {
+            List<OrderDetail> orderDetailList = orderDetailMapper.listByOrderId(orderVO.getId());
+            orderVO.setOrderDishes(orderDetailList.stream()
+                    .map(detail -> detail.getName() + "*" + detail.getNumber())
+                    .collect(Collectors.joining(";")));
+        }
+        return new PageResult(page.getTotal() , result);
     }
 
 }

@@ -24,4 +24,6 @@ public interface OrderMapper {
 
     @Select("select * from orders where id = #{id}")
     Orders getById(Long id);
+
+    Page<OrderVO> condtitionSearch(OrdersPageQueryDTO ordersPageQueryDTO);
 }
