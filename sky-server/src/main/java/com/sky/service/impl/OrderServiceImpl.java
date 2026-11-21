@@ -5,6 +5,7 @@ import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
 import com.sky.constant.MessageConstant;
 import com.sky.context.BaseContext;
+import com.sky.dto.OrdersConfirmDTO;
 import com.sky.dto.OrdersPageQueryDTO;
 import com.sky.dto.OrdersPaymentDTO;
 import com.sky.dto.OrdersSubmitDTO;
@@ -250,6 +251,14 @@ public class OrderServiceImpl implements OrderService {
         BeanUtils.copyProperties(orders , orderVO);
         orderVO.setOrderDetailList(orderDetailList);
         return orderVO;
+    }
+
+    @Override
+    public void confirm(OrdersConfirmDTO ordersConfirmDTO) {
+        ordersConfirmDTO.setStatus(Orders.CONFIRMED);
+        Orders orders = new Orders();
+        BeanUtils.copyProperties(ordersConfirmDTO , orders);
+        orderMapper.update(orders);
     }
 
 }

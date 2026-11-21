@@ -8,6 +8,7 @@ import com.sky.enumeration.OperationType;
 import com.sky.vo.OrderVO;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Select;
+import org.apache.ibatis.annotations.Update;
 
 @Mapper
 public interface OrderMapper {
@@ -32,4 +33,5 @@ public interface OrderMapper {
 
     @Select("select count(*) from orders where status = #{status}")
     Integer countStatus(Integer status);
+
 }
