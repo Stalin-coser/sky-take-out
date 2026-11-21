@@ -18,5 +18,6 @@ sky:
     database: 10
 
   wechat:
+    mock-refund: true
     appid: wx63d1896fe7712c6a
     secret: 079ec97f1fa46410062d3940168511ab

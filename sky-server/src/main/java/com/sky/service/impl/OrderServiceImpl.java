@@ -5,10 +5,7 @@ import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
 import com.sky.constant.MessageConstant;
 import com.sky.context.BaseContext;
-import com.sky.dto.OrdersConfirmDTO;
-import com.sky.dto.OrdersPageQueryDTO;
-import com.sky.dto.OrdersPaymentDTO;
-import com.sky.dto.OrdersSubmitDTO;
+import com.sky.dto.*;
 import com.sky.entity.*;
 import com.sky.exception.AddressBookBusinessException;
 import com.sky.exception.OrderBusinessException;
@@ -21,8 +18,10 @@ import com.sky.vo.OrderPaymentVO;
 import com.sky.vo.OrderStatisticsVO;
 import com.sky.vo.OrderSubmitVO;
 import com.sky.vo.OrderVO;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -33,6 +32,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
+@Slf4j
 public class OrderServiceImpl implements OrderService {
 
     @Autowired
@@ -45,6 +45,9 @@ public class OrderServiceImpl implements OrderService {
     private ShoppingCartMapper shoppingCartMapper;
     @Autowired
     private WeChatPayUtil weChatPayUtil;
+
+    @Value("${sky.wechat.mock-refund:false}")
+    private boolean mockRefund;
     @Autowired
     private UserMapper userMapper;
 
@@ -258,6 +261,39 @@ public class OrderServiceImpl implements OrderService {
         ordersConfirmDTO.setStatus(Orders.CONFIRMED);
         Orders orders = new Orders();
         BeanUtils.copyProperties(ordersConfirmDTO , orders);
+        orderMapper.update(orders);
+    }
+
+    @Override
+    public void rejection(OrdersRejectionDTO ordersRejectionDTO) throws Exception {
+        // 根据id查询订单
+        Orders ordersDB = orderMapper.getById(ordersRejectionDTO.getId());
+
+        // 订单只有存在且状态为2（待接单）才可以拒单
+        if (ordersDB == null || !ordersDB.getStatus().equals(Orders.TO_BE_CONFIRMED)) {
+            throw new OrderBusinessException(MessageConstant.ORDER_STATUS_ERROR);
+        }
+
+        Orders orders = new Orders();
+        orders.setId(ordersDB.getId());
+        orders.setStatus(Orders.CANCELLED);
+        orders.setRejectionReason(ordersRejectionDTO.getRejectionReason());
+        orders.setCancelTime(LocalDateTime.now());
+
+        if (Orders.PAID.equals(ordersDB.getPayStatus())) {
+            if (mockRefund) {
+                orders.setPayStatus(Orders.REFUND);
+                log.info("模拟退款，订单号：{}", ordersDB.getNumber());
+            } else {
+                String refund = weChatPayUtil.refund(
+                        ordersDB.getNumber(),
+                        ordersDB.getNumber(),
+                        new BigDecimal(0.01),
+                        new BigDecimal(0.01));
+                log.info("申请退款：{}", refund);
+            }
+        }
+
         orderMapper.update(orders);
     }
 
