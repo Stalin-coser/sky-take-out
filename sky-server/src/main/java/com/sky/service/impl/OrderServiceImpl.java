@@ -280,6 +280,26 @@ public class OrderServiceImpl implements OrderService {
         orders.setRejectionReason(ordersRejectionDTO.getRejectionReason());
         orders.setCancelTime(LocalDateTime.now());
 
+        refundIfPaid(ordersDB, orders);
+        orderMapper.update(orders);
+    }
+
+    @Override
+    public void cancel(OrdersCancelDTO ordersCancelDTO) throws Exception {
+        // 根据id查询订单
+        Orders ordersDB = orderMapper.getById(ordersCancelDTO.getId());
+
+        Orders orders = new Orders();
+        orders.setId(ordersCancelDTO.getId());
+        orders.setStatus(Orders.CANCELLED);
+        orders.setCancelReason(ordersCancelDTO.getCancelReason());
+        orders.setCancelTime(LocalDateTime.now());
+
+        refundIfPaid(ordersDB, orders);
+        orderMapper.update(orders);
+    }
+
+    private void refundIfPaid(Orders ordersDB, Orders orders) throws Exception {
         if (Orders.PAID.equals(ordersDB.getPayStatus())) {
             if (mockRefund) {
                 orders.setPayStatus(Orders.REFUND);
@@ -293,8 +313,6 @@ public class OrderServiceImpl implements OrderService {
                 log.info("申请退款：{}", refund);
             }
         }
-
-        orderMapper.update(orders);
     }
 
 }
