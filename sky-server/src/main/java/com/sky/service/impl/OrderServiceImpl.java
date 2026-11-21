@@ -170,7 +170,11 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     public OrderVO getOrderWithDetails(Long id) {
-        Orders orders = orderMapper.getById(id);
+        Long userId = BaseContext.getCurrentId();
+        Orders orders = orderMapper.getByIds(id , userId);
+        if(orders == null){
+            throw new OrderBusinessException(MessageConstant.ORDER_NOT_FOUND);
+        }
         List<OrderDetail> list = orderDetailMapper.listByOrderId(id);
         OrderVO orderVO = new OrderVO();
         BeanUtils.copyProperties(orders , orderVO);
@@ -190,8 +194,8 @@ public class OrderServiceImpl implements OrderService {
     @Transactional
     public void repetition(Long id) {
         Long userId = BaseContext.getCurrentId();
-        Orders order = orderMapper.getById(id);
-        if (!userId.equals(order.getUserId())) {
+        Orders order = orderMapper.getByIds(id , userId);
+        if (order == null) {
             throw new OrderBusinessException(MessageConstant.ORDER_NOT_FOUND);
         }
 
@@ -232,6 +236,20 @@ public class OrderServiceImpl implements OrderService {
         orderStatisticsVO.setToBeConfirmed(to_be_confirmed);
         orderStatisticsVO.setDeliveryInProgress(delivery_in_progress);
         return orderStatisticsVO;
+    }
+
+    @Override
+    public OrderVO getByIdWithDetails(Long id) {
+        OrderVO orderVO = new OrderVO();
+        Orders orders = orderMapper.getById(id);
+        if(orders == null){
+            throw new OrderBusinessException(MessageConstant.ORDER_NOT_FOUND);
+        }
+        List<OrderDetail> orderDetailList = orderDetailMapper.listByOrderId(id);
+
+        BeanUtils.copyProperties(orders , orderVO);
+        orderVO.setOrderDetailList(orderDetailList);
+        return orderVO;
     }
 
 }

@@ -28,4 +28,6 @@ public interface OrderService {
     PageResult conditionSearch(OrdersPageQueryDTO ordersPageQueryDTO);
 
     OrderStatisticsVO statistics();
+
+    OrderVO getByIdWithDetails(Long id);
 }
