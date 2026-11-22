@@ -8,7 +8,7 @@ import org.springframework.stereotype.Component;
 @Slf4j
 public class MyTask {
 
-    @Scheduled(cron = "*/5 * * * * *")
+    //@Scheduled(cron = "*/5 * * * * *")
     public void executeTask(){
         log.info("hhhhhhhh");
     }
